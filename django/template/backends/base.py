@@ -24,6 +24,9 @@ class BaseEngine(object):
         self.name = params.pop('NAME')
         self.dirs = list(params.pop('DIRS'))
         self.app_dirs = bool(params.pop('APP_DIRS'))
+        # This option ended up working only for Jinja2 because DjangoTemplates
+        # uses template loaders rather thtan the template_dirs property.
+        self.search_app_dirs_before_dirs = params.pop('SEARCH_APP_DIRS_BEFORE_DIRS', False)
         if params:
             raise ImproperlyConfigured(
                 "Unknown parameters: {}".format(", ".join(params)))
@@ -65,7 +68,11 @@ class BaseEngine(object):
         # Immutable return value because it's cached and shared by callers.
         template_dirs = tuple(self.dirs)
         if self.app_dirs:
-            template_dirs += get_app_template_dirs(self.app_dirname)
+            app_template_dirs = get_app_template_dirs(self.app_dirname)
+            if self.search_app_dirs_before_dirs:
+                template_dirs = app_template_dirs + template_dirs
+            else:
+                template_dirs += app_template_dirs
         return template_dirs
 
     def iter_template_filenames(self, template_name):
