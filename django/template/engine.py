@@ -18,7 +18,8 @@ class Engine(object):
 
     def __init__(self, dirs=None, app_dirs=False, context_processors=None,
                  debug=False, loaders=None, string_if_invalid='',
-                 file_charset='utf-8', libraries=None, builtins=None, autoescape=True):
+                 file_charset='utf-8', libraries=None, builtins=None, autoescape=True,
+                 search_app_dirs_before_dirs=False):
         if dirs is None:
             dirs = []
         if context_processors is None:
@@ -26,7 +27,10 @@ class Engine(object):
         if loaders is None:
             loaders = ['django.template.loaders.filesystem.Loader']
             if app_dirs:
-                loaders += ['django.template.loaders.app_directories.Loader']
+                if search_app_dirs_before_dirs:
+                    loaders = ['django.template.loaders.app_directories.Loader'] + loaders
+                else:
+                    loaders += ['django.template.loaders.app_directories.Loader']
             if not debug:
                 loaders = [('django.template.loaders.cached.Loader', loaders)]
         else:
